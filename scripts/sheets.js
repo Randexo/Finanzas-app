@@ -1,4 +1,6 @@
-// sheets.js — Sincronización con Google Sheets via Apps Script
+// sheets.js — Sincronización con Google Sheets
+
+const SHEET_ID = '12ipWUNldTpSfUYiw6e1BpToGT6Mpqy6assxeqfC5PYM';
 
 let sheetsUrl = '';
 let _isSyncing = false;
@@ -15,7 +17,56 @@ function onSheetsInput() {
   localStorage.setItem('mf_sheets_url', sheetsUrl);
 }
 
-// ── Guardar config (categorías + ingreso) ─────────────────────
+// ── Lectura via Google Sheets Visualization API (sin CORS) ────
+
+function gvizUrl(sheetName) {
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+}
+
+function parseCsvLine(line) {
+  const result = [];
+  let i = 0;
+  while (i < line.length) {
+    if (line[i] === '"') {
+      let field = '';
+      i++;
+      while (i < line.length) {
+        if (line[i] === '"') {
+          if (line[i + 1] === '"') { field += '"'; i += 2; }
+          else { i++; break; }
+        } else { field += line[i++]; }
+      }
+      result.push(field);
+      if (line[i] === ',') i++;
+    } else {
+      const end = line.indexOf(',', i);
+      if (end === -1) { result.push(line.slice(i)); break; }
+      result.push(line.slice(i, end));
+      i = end + 1;
+    }
+  }
+  return result;
+}
+
+function parseCsv(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = parseCsvLine(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = parseCsvLine(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i] !== undefined ? vals[i] : '');
+    return obj;
+  });
+}
+
+async function fetchCsv(sheetName) {
+  const resp = await fetch(gvizUrl(sheetName));
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  return parseCsv(await resp.text());
+}
+
+// ── Guardar config (categorías + ingreso) — via Apps Script ───
 
 function scheduleConfigSync() {
   if (_isSyncing) return;
@@ -40,7 +91,7 @@ async function saveConfigToSheets() {
   }
 }
 
-// ── Guardar / eliminar gasto ──────────────────────────────────
+// ── Guardar / eliminar gasto — via Apps Script ────────────────
 
 async function saveToSheets(expense) {
   if (!sheetsUrl) return;
@@ -77,59 +128,53 @@ async function deleteFromSheets(id) {
   }
 }
 
-// ── JSONP helper (evita CORS en lecturas) ─────────────────────
-
-function fetchJsonp(url) {
-  return new Promise((resolve, reject) => {
-    const cb = 'gs_' + Date.now();
-    const script = document.createElement('script');
-    window[cb] = data => { delete window[cb]; document.body.removeChild(script); resolve(data); };
-    script.onerror = () => { delete window[cb]; document.body.removeChild(script); reject(new Error('JSONP error')); };
-    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
-    document.body.appendChild(script);
-  });
-}
-
 // ── Sincronizar todo desde Sheets ─────────────────────────────
 
 async function syncFromSheets() {
   if (!sheetsUrl) return;
   _isSyncing = true;
   try {
-    // Cargar configuración (categorías + ingreso)
-    const cfgData = await fetchJsonp(sheetsUrl + '?type=config');
-    if (cfgData.ok && cfgData.config && cfgData.config.categories && cfgData.config.categories.length > 0) {
-      state.income     = cfgData.config.income || state.income;
-      state.categories = cfgData.config.categories;
-      nextCatId = Math.max(...state.categories.map(c => c.id)) + 1;
-      const incInput = document.getElementById('inp-income');
-      if (incInput) incInput.value = state.income;
+    // Cargar config (categorías + ingreso) desde pestaña Config
+    const cfgRows = await fetchCsv('Config');
+    const cfgMap  = {};
+    cfgRows.forEach(r => { cfgMap[r.key] = r.value; });
+
+    if (cfgMap.categories) {
+      try {
+        const cats = JSON.parse(cfgMap.categories);
+        if (cats.length > 0) {
+          state.categories = cats;
+          state.income     = parseFloat(cfgMap.income) || state.income;
+          nextCatId = Math.max(...state.categories.map(c => c.id)) + 1;
+          const incInput = document.getElementById('inp-income');
+          if (incInput) incInput.value = state.income;
+        }
+      } catch(e) {}
     } else if (state.categories.length > 0) {
-      await saveConfigToSheets();
+      saveConfigToSheets();
     }
 
-    // Cargar gastos
-    const expData = await fetchJsonp(sheetsUrl);
-    if (!expData.ok) { console.error('[Sheets] error:', expData.error); return; }
+    // Cargar gastos desde pestaña Gastos
+    const expRows = await fetchCsv('Gastos');
 
-    if (expData.expenses.length === 0 && state.expenses.length > 0) {
-      console.log('[Sheets] primera vez — migrando', state.expenses.length, 'gastos y config');
+    if (expRows.length === 0 && state.expenses.length > 0) {
+      console.log('[Sheets] migrando', state.expenses.length, 'gastos locales');
       for (const e of state.expenses) await saveToSheets(e);
-      await saveConfigToSheets();
+      saveConfigToSheets();
     } else {
-      state.expenses = expData.expenses.map(e => ({
-        id:     e.id,
-        catId:  e.catId,
-        amount: e.monto,
-        note:   e.nota || '',
-        date:   e.fecha,
-        source: e.fuente || 'manual'
+      state.expenses = expRows.map(r => ({
+        id:     r.id,
+        catId:  parseInt(r.catId) || 0,
+        amount: parseFloat(r.monto) || 0,
+        note:   r.nota || '',
+        date:   r.fecha,
+        source: r.fuente || 'manual'
       }));
     }
 
     localStorage.setItem('mf_state', JSON.stringify({ state, nextCatId, nextExpId }));
     recalcAll();
-    console.log('[Sheets] sincronizado — ' + (expData.expenses?.length || 0) + ' gastos');
+    console.log('[Sheets] sincronizado —', expRows.length, 'gastos');
   } catch(e) {
     console.error('[Sheets] syncFromSheets:', e.message);
   } finally {
