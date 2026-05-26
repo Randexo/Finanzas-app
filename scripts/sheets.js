@@ -77,6 +77,19 @@ async function deleteFromSheets(id) {
   }
 }
 
+// ── JSONP helper (evita CORS en lecturas) ─────────────────────
+
+function fetchJsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cb = 'gs_' + Date.now();
+    const script = document.createElement('script');
+    window[cb] = data => { delete window[cb]; document.body.removeChild(script); resolve(data); };
+    script.onerror = () => { delete window[cb]; document.body.removeChild(script); reject(new Error('JSONP error')); };
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
+    document.body.appendChild(script);
+  });
+}
+
 // ── Sincronizar todo desde Sheets ─────────────────────────────
 
 async function syncFromSheets() {
@@ -84,8 +97,7 @@ async function syncFromSheets() {
   _isSyncing = true;
   try {
     // Cargar configuración (categorías + ingreso)
-    const cfgResp = await fetch(sheetsUrl + '?type=config');
-    const cfgData = await cfgResp.json();
+    const cfgData = await fetchJsonp(sheetsUrl + '?type=config');
     if (cfgData.ok && cfgData.config && cfgData.config.categories && cfgData.config.categories.length > 0) {
       state.income     = cfgData.config.income || state.income;
       state.categories = cfgData.config.categories;
@@ -97,8 +109,7 @@ async function syncFromSheets() {
     }
 
     // Cargar gastos
-    const expResp = await fetch(sheetsUrl);
-    const expData = await expResp.json();
+    const expData = await fetchJsonp(sheetsUrl);
     if (!expData.ok) { console.error('[Sheets] error:', expData.error); return; }
 
     if (expData.expenses.length === 0 && state.expenses.length > 0) {
