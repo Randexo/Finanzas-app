@@ -139,6 +139,8 @@ async function syncFromSheets() {
     const cfgMap  = {};
     cfgRows.forEach(r => { cfgMap[r.key] = r.value; });
 
+    console.log('[Sheets] cfgRows:', JSON.stringify(cfgRows));
+    console.log('[Sheets] cfgMap:', JSON.stringify(cfgMap));
     if (cfgMap.categories) {
       try {
         const cats = JSON.parse(cfgMap.categories);
