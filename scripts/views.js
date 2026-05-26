@@ -74,7 +74,7 @@ function generateInviteLink() {
     geminiKey: tgConfig.claudeKey
   };
   const hash = btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
-  const base = location.href.split('?')[0].split('#')[0];
+  const base = 'https://randexo.github.io/Finanzas-app';
   const url  = base + '#invite=' + hash;
   navigator.clipboard.writeText(url).then(() => {
     alert('Link copiado.\n\nCompartelo por WhatsApp. Cada persona solo necesita abrirlo una vez.');
