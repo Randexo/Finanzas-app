@@ -92,6 +92,8 @@ async function syncFromSheets() {
       nextCatId = Math.max(...state.categories.map(c => c.id)) + 1;
       const incInput = document.getElementById('inp-income');
       if (incInput) incInput.value = state.income;
+    } else if (state.categories.length > 0) {
+      await saveConfigToSheets();
     }
 
     // Cargar gastos
