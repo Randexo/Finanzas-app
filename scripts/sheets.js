@@ -1,6 +1,8 @@
 // sheets.js — Sincronización con Google Sheets via Apps Script
 
 let sheetsUrl = '';
+let _isSyncing = false;
+let _configTimer = null;
 
 function loadSheetsConfig() {
   sheetsUrl = localStorage.getItem('mf_sheets_url') || '';
@@ -12,6 +14,33 @@ function onSheetsInput() {
   sheetsUrl = document.getElementById('sheets-url').value.trim();
   localStorage.setItem('mf_sheets_url', sheetsUrl);
 }
+
+// ── Guardar config (categorías + ingreso) ─────────────────────
+
+function scheduleConfigSync() {
+  if (_isSyncing) return;
+  clearTimeout(_configTimer);
+  _configTimer = setTimeout(saveConfigToSheets, 1500);
+}
+
+async function saveConfigToSheets() {
+  if (!sheetsUrl) return;
+  try {
+    await fetch(sheetsUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action:     'saveConfig',
+        income:     state.income,
+        categories: state.categories
+      })
+    });
+  } catch(e) {
+    console.error('[Sheets] saveConfig:', e.message);
+  }
+}
+
+// ── Guardar / eliminar gasto ──────────────────────────────────
 
 async function saveToSheets(expense) {
   if (!sheetsUrl) return;
@@ -48,31 +77,49 @@ async function deleteFromSheets(id) {
   }
 }
 
+// ── Sincronizar todo desde Sheets ─────────────────────────────
+
 async function syncFromSheets() {
   if (!sheetsUrl) return;
+  _isSyncing = true;
   try {
-    const resp = await fetch(sheetsUrl);
-    const data = await resp.json();
-    if (!data.ok) { console.error('[Sheets] error:', data.error); return; }
-
-    if (data.expenses.length === 0 && state.expenses.length > 0) {
-      console.log('[Sheets] primera vez — migrando', state.expenses.length, 'gastos locales');
-      for (const e of state.expenses) await saveToSheets(e);
-      return;
+    // Cargar configuración (categorías + ingreso)
+    const cfgResp = await fetch(sheetsUrl + '?type=config');
+    const cfgData = await cfgResp.json();
+    if (cfgData.ok && cfgData.config && cfgData.config.categories && cfgData.config.categories.length > 0) {
+      state.income     = cfgData.config.income || state.income;
+      state.categories = cfgData.config.categories;
+      nextCatId = Math.max(...state.categories.map(c => c.id)) + 1;
+      const incInput = document.getElementById('inp-income');
+      if (incInput) incInput.value = state.income;
     }
 
-    state.expenses = data.expenses.map(e => ({
-      id:     e.id,
-      catId:  e.catId,
-      amount: e.monto,
-      note:   e.nota || '',
-      date:   e.fecha,
-      source: e.fuente || 'manual'
-    }));
-    saveState();
+    // Cargar gastos
+    const expResp = await fetch(sheetsUrl);
+    const expData = await expResp.json();
+    if (!expData.ok) { console.error('[Sheets] error:', expData.error); return; }
+
+    if (expData.expenses.length === 0 && state.expenses.length > 0) {
+      console.log('[Sheets] primera vez — migrando', state.expenses.length, 'gastos y config');
+      for (const e of state.expenses) await saveToSheets(e);
+      await saveConfigToSheets();
+    } else {
+      state.expenses = expData.expenses.map(e => ({
+        id:     e.id,
+        catId:  e.catId,
+        amount: e.monto,
+        note:   e.nota || '',
+        date:   e.fecha,
+        source: e.fuente || 'manual'
+      }));
+    }
+
+    localStorage.setItem('mf_state', JSON.stringify({ state, nextCatId, nextExpId }));
     recalcAll();
-    console.log('[Sheets] sincronizado:', data.expenses.length, 'gastos');
+    console.log('[Sheets] sincronizado — ' + (expData.expenses?.length || 0) + ' gastos');
   } catch(e) {
     console.error('[Sheets] syncFromSheets:', e.message);
+  } finally {
+    _isSyncing = false;
   }
 }

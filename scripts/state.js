@@ -26,6 +26,7 @@ let nextExpId = 1;
 
 function saveState() {
   localStorage.setItem('mf_state', JSON.stringify({ state, nextCatId, nextExpId }));
+  if (typeof scheduleConfigSync === 'function') scheduleConfigSync();
 }
 
 function loadState() {
