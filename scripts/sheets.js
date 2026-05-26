@@ -76,19 +76,16 @@ function scheduleConfigSync() {
 
 async function saveConfigToSheets() {
   if (!sheetsUrl) return;
-  try {
-    await fetch(sheetsUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action:     'saveConfig',
-        income:     state.income,
-        categories: state.categories
-      })
-    });
-  } catch(e) {
-    console.error('[Sheets] saveConfig:', e.message);
-  }
+  await fetch(sheetsUrl, {
+    method: 'POST',
+    mode:   'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({
+      action:     'saveConfig',
+      income:     state.income,
+      categories: state.categories
+    })
+  });
 }
 
 // ── Guardar / eliminar gasto — via Apps Script ────────────────
@@ -96,36 +93,30 @@ async function saveConfigToSheets() {
 async function saveToSheets(expense) {
   if (!sheetsUrl) return;
   const cat = state.categories.find(c => c.id === expense.catId);
-  try {
-    await fetch(sheetsUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        id:        String(expense.id),
-        fecha:     expense.date,
-        catId:     expense.catId,
-        catNombre: cat ? cat.name : '',
-        monto:     expense.amount,
-        nota:      expense.note || '',
-        fuente:    expense.source || 'manual'
-      })
-    });
-  } catch(e) {
-    console.error('[Sheets] guardar:', e.message);
-  }
+  await fetch(sheetsUrl, {
+    method: 'POST',
+    mode:   'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({
+      id:        String(expense.id),
+      fecha:     expense.date,
+      catId:     expense.catId,
+      catNombre: cat ? cat.name : '',
+      monto:     expense.amount,
+      nota:      expense.note || '',
+      fuente:    expense.source || 'manual'
+    })
+  });
 }
 
 async function deleteFromSheets(id) {
   if (!sheetsUrl) return;
-  try {
-    await fetch(sheetsUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'delete', id: String(id) })
-    });
-  } catch(e) {
-    console.error('[Sheets] eliminar:', e.message);
-  }
+  await fetch(sheetsUrl, {
+    method: 'POST',
+    mode:   'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'delete', id: String(id) })
+  });
 }
 
 // ── Sincronizar todo desde Sheets ─────────────────────────────
@@ -139,8 +130,6 @@ async function syncFromSheets() {
     const cfgMap  = {};
     cfgRows.forEach(r => { cfgMap[r.key] = r.value; });
 
-    console.log('[Sheets] cfgRows:', JSON.stringify(cfgRows));
-    console.log('[Sheets] cfgMap:', JSON.stringify(cfgMap));
     if (cfgMap.categories) {
       try {
         const cats = JSON.parse(cfgMap.categories);
@@ -152,7 +141,8 @@ async function syncFromSheets() {
           if (incInput) incInput.value = state.income;
         }
       } catch(e) {}
-    } else if (state.categories.length > 0) {
+    } else if (cfgRows.length === 0 && state.categories.length > 0) {
+      // Sheet vacío por primera vez — migrar config local
       saveConfigToSheets();
     }
 
@@ -160,7 +150,6 @@ async function syncFromSheets() {
     const expRows = await fetchCsv('Gastos');
 
     if (expRows.length === 0 && state.expenses.length > 0) {
-      console.log('[Sheets] migrando', state.expenses.length, 'gastos locales');
       for (const e of state.expenses) await saveToSheets(e);
       saveConfigToSheets();
     } else {
