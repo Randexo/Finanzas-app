@@ -19,7 +19,7 @@ function addExpense(catId, amount, note, date, source) {
 }
 
 function deleteExpense(id) {
-  state.expenses = state.expenses.filter(e => e.id !== id);
+  state.expenses = state.expenses.filter(e => String(e.id) !== String(id));
   saveState();
   deleteFromSheets(id);
   recalcAll();
@@ -55,7 +55,7 @@ function renderExpenses() {
       <td class="right" style="font-weight:600;font-size:0.88rem">${fmt(e.amount)}</td>
       <td style="font-size:0.78rem;color:#7A6A5A">${escHtml(e.note || '–')}</td>
       <td style="text-align:center">${srcHtml}</td>
-      <td><button class="del-btn" onclick="deleteExpense(${e.id})">×</button></td>
+      <td><button class="del-btn" onclick="deleteExpense('${e.id}')">×</button></td>
     </tr>`;
   }).join('');
 }
