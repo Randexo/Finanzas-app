@@ -42,7 +42,7 @@ function renderBudgetTable() {
       </div></td>
       <td class="right">
         <input class="amount-input" type="number" min="0" placeholder="0" value="${cat.budget||''}"
-          oninput="state.categories.find(c=>c.id===${cat.id}).budget=parseFloat(this.value)||0; saveState(); recalcAll()">
+          onchange="state.categories.find(c=>c.id===${cat.id}).budget=parseFloat(this.value)||0; saveState(); recalcAll()">
       </td>
       <td class="right" style="font-size:0.86rem;font-weight:600">${fmt(real)}</td>
       <td class="right diff-cell ${diff.cls}">${diff.txt}</td>
