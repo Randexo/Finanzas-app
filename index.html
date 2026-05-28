@@ -45,7 +45,7 @@
       <div class="income-input-wrap">
         <span class="currency">$</span>
         <input type="number" id="inp-income" value="5000" step="100"
-          oninput="state.income = parseFloat(this.value)||0; saveState(); recalcAll()">
+          onchange="state.income = parseFloat(this.value)||0; saveState(); recalcAll()">
       </div>
       <span class="income-note">Ajusta el monto segun tu realidad</span>
     </div>

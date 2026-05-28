@@ -58,6 +58,7 @@ function isLocked() {
 
 function applyLock() {
   if (!isLocked()) return;
+  document.body.classList.add('locked');
   const body   = document.getElementById('tg-body');
   const toggle = document.getElementById('tg-toggle');
   const header = document.querySelector('.tg-header');
