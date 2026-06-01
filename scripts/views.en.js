@@ -102,6 +102,7 @@ function generateInviteLink() {
   if (_inv) {
     try {
       const cfg = JSON.parse(decodeURIComponent(escape(atob(_inv))));
+      localStorage.clear();
       if (cfg.sheetsUrl) localStorage.setItem('mf_sheets_url', cfg.sheetsUrl);
       localStorage.setItem('mf_tg', JSON.stringify({
         token: cfg.token || '', chatId: cfg.chatId || '',

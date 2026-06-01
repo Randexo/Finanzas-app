@@ -113,9 +113,10 @@ function loadState() {
     const raw = localStorage.getItem('mf_state');
     if (!raw) return;
     const parsed = JSON.parse(raw);
-    state      = parsed.state;
-    nextCatId  = parsed.nextCatId;
-    nextExpId  = parsed.nextExpId;
+    if (!parsed.state) return;
+    state     = parsed.state;
+    nextCatId = parsed.nextCatId || nextCatId;
+    nextExpId = parsed.nextExpId || nextExpId;
   } catch(e) {
     console.warn('Could not load saved state:', e);
   }
