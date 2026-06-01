@@ -28,6 +28,9 @@ body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #F5F0EB; color:
 .topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
 .topbar h1 { font-size: 1.4rem; font-weight: 700; }
 .topbar p { font-size: 0.82rem; color: #7A6A5A; margin-top: 2px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.lang-btn { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; padding: 5px 10px; border-radius: 6px; border: 1px solid #C4956A; color: #C4956A; text-decoration: none; background: none; }
+.lang-btn:hover { background: #C4956A; color: #fff; }
 .month-selector select {
   border: 1px solid #E0D8D0; border-radius: 8px; padding: 7px 12px;
   font-family: inherit; font-size: 0.82rem; background: #fff; color: #2D1F14;
