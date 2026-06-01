@@ -17,11 +17,29 @@ function loadTgConfig() {
     if (chatEl)   chatEl.value   = tgConfig.chatId    || '';
     if (claudeEl) claudeEl.value = tgConfig.claudeKey || '';
     updateTgDot();
+    if (tgConfig.token) setTimeout(saveTgConfigToSheets, 2000);
   } catch(e) {}
 }
 
 function saveTgConfig() {
   localStorage.setItem('mf_tg', JSON.stringify(tgConfig));
+}
+
+let _tgSyncTimer = null;
+
+async function saveTgConfigToSheets() {
+  if (!sheetsUrl) return;
+  await fetch(sheetsUrl, {
+    method: 'POST',
+    mode:   'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({
+      action:    'saveTgConfig',
+      token:     tgConfig.token,
+      chatId:    tgConfig.chatId,
+      geminiKey: tgConfig.claudeKey
+    })
+  });
 }
 
 function onTgInput() {
@@ -30,6 +48,8 @@ function onTgInput() {
   tgConfig.claudeKey = document.getElementById('tg-claude-key').value.trim();
   saveTgConfig();
   updateTgDot();
+  clearTimeout(_tgSyncTimer);
+  _tgSyncTimer = setTimeout(saveTgConfigToSheets, 1500);
 }
 
 function updateTgDot() {
