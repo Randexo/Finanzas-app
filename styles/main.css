@@ -167,6 +167,69 @@ td.right { text-align: right; }
 .date-input { font-family: inherit; font-size: 0.82rem; border: 1px solid #E0D8D0; border-radius: 8px; padding: 7px 10px; outline: none; color: #2D1F14; transition: border-color 0.15s; }
 .date-input:focus { border-color: #C4956A; }
 
+/* ── MOBILE ──────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  /* Sidebar → barra de navegación inferior */
+  .sidebar {
+    position: fixed; top: auto; bottom: 0; left: 0; right: 0; width: 100%;
+    height: auto; flex-direction: row; padding: 0; z-index: 100;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .sidebar-logo, .sidebar-section, .sidebar-tg { display: none; }
+  .sidebar-link {
+    flex: 1; text-align: center; padding: 10px 2px 12px;
+    font-size: 0.62rem; border-left: none; border-top: 3px solid transparent;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sidebar-link.active { border-top-color: #C4956A; background: rgba(196,149,106,0.15); border-left-color: transparent; }
+
+  /* Main */
+  .main { margin-left: 0; padding: 20px 14px 90px; }
+
+  /* Topbar */
+  .topbar { flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+  .topbar-right { margin-left: auto; }
+
+  /* Income */
+  .income-row { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .income-note { display: none; }
+  .income-input-wrap input { width: 110px; }
+
+  /* Summary: 2 columnas */
+  .summary-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .sum-card { padding: 14px 14px; }
+  .sum-card .value { font-size: 1.2rem; }
+
+  /* Tablas: scroll horizontal */
+  .card { overflow-x: auto; }
+  table { min-width: 480px; }
+
+  /* Progress bars */
+  .bar-label { min-width: 90px; font-size: 0.72rem; }
+  .bar-nums  { min-width: 80px; font-size: 0.68rem; }
+
+  /* Telegram: 1 columna */
+  .tg-fields { grid-template-columns: 1fr; }
+  .tg-actions { flex-direction: column; align-items: stretch; }
+  .tg-actions .btn-primary, .tg-actions .btn-secondary { width: 100%; text-align: center; }
+  .tg-status-msg { margin-left: 0; }
+
+  /* Formulario de gasto */
+  .add-form { flex-direction: column; }
+  .ff.f-cat select, .ff.f-amt input, .ff.f-date input { width: 100%; }
+  .ff.f-note { width: 100%; }
+  .btn-submit { width: 100%; }
+
+  /* Charts: 1 columna */
+  .charts-grid { grid-template-columns: 1fr; }
+  .chart-full  { grid-column: auto; }
+  .chart-wrap  { height: 220px; }
+
+  /* Exportar */
+  .export-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .export-row > div { flex-wrap: wrap; }
+}
+
 /* Modo bloqueado — oculta controles de edición para usuarios invitados */
 body.locked .amount-input,
 body.locked .cat-name-input { pointer-events: none; }
