@@ -72,13 +72,16 @@ function generateInviteLink() {
     sheetsUrl: sheetsUrl,
     token:     tgConfig.token,
     chatId:    tgConfig.chatId,
-    geminiKey: tgConfig.claudeKey
+    geminiKey: tgConfig.claudeKey,
+    state:     localStorage.getItem('mf_state') || '{}'
   };
   const hash = btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
   const base = 'https://randexo.github.io/Finanzas-app';
   const url  = base + '#invite=' + hash;
+  const catCount = state.categories.length;
+  const expCount = state.expenses.length;
   navigator.clipboard.writeText(url).then(() => {
-    alert('Link copiado.\n\nCompartelo por WhatsApp. Cada persona solo necesita abrirlo una vez.');
+    alert(`Link copiado.\n\nCompartelo por WhatsApp. Cada persona solo necesita abrirlo una vez.\n\n✓ Incluye ${catCount} categorías y ${expCount} gastos del estado actual.`);
   }).catch(() => {
     prompt('Copia este link y compartelo:', url);
   });
@@ -101,6 +104,7 @@ function generateInviteLink() {
         token: cfg.token || '', chatId: cfg.chatId || '',
         claudeKey: cfg.geminiKey || '', lastUpdateId: 0
       }));
+      if (cfg.state && cfg.state !== '{}') localStorage.setItem('mf_state', cfg.state);
       localStorage.setItem('mf_locked', '1');
       history.replaceState(null, '', location.pathname + location.search);
     } catch(e) { console.error('Invite link invalido:', e); }
