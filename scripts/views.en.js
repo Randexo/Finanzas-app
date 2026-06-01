@@ -85,6 +85,11 @@ function generateInviteLink() {
 // ── Init ──────────────────────────────────────────────────────
 
 (function init() {
+  if (location.search.includes('unlock')) {
+    localStorage.removeItem('mf_locked');
+    history.replaceState(null, '', location.pathname);
+  }
+
   if (location.hash.startsWith('#invite=')) {
     try {
       const cfg = JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(8)))));
