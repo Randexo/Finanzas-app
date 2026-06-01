@@ -66,20 +66,20 @@ function applyLock() {
 }
 
 function generateInviteLink() {
+  const full = JSON.parse(localStorage.getItem('mf_state') || '{}');
   const cfg = {
     sheetsUrl: sheetsUrl,
     token:     tgConfig.token,
     chatId:    tgConfig.chatId,
     geminiKey: tgConfig.claudeKey,
-    state:     localStorage.getItem('mf_state') || '{}'
+    state:     JSON.stringify({ income: full.income || 0, categories: full.categories || [] })
   };
   const hash = btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
   const base = 'https://randexo.github.io/Finanzas-app';
-  const url  = base + '#invite=' + hash;
+  const url  = base + '?invite=' + hash;
   const catCount = state.categories.length;
-  const expCount = state.expenses.length;
   navigator.clipboard.writeText(url).then(() => {
-    alert(`Link copied.\n\nShare it via WhatsApp. Each person only needs to open it once.\n\n✓ Includes ${catCount} categories and ${expCount} expenses from your current state.`);
+    alert(`Link copied.\n\nShare it via WhatsApp. Each person only needs to open it once.\n\n✓ Includes ${catCount} categories (expenses sync from Sheets).`);
   }).catch(() => {
     prompt('Copy this link and share it:', url);
   });
@@ -93,9 +93,10 @@ function generateInviteLink() {
     history.replaceState(null, '', location.pathname);
   }
 
-  if (location.hash.startsWith('#invite=')) {
+  const _inv = new URLSearchParams(location.search).get('invite');
+  if (_inv) {
     try {
-      const cfg = JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(8)))));
+      const cfg = JSON.parse(decodeURIComponent(escape(atob(_inv))));
       if (cfg.sheetsUrl) localStorage.setItem('mf_sheets_url', cfg.sheetsUrl);
       localStorage.setItem('mf_tg', JSON.stringify({
         token: cfg.token || '', chatId: cfg.chatId || '',
@@ -103,7 +104,7 @@ function generateInviteLink() {
       }));
       if (cfg.state && cfg.state !== '{}') localStorage.setItem('mf_state', cfg.state);
       localStorage.setItem('mf_locked', '1');
-      history.replaceState(null, '', location.pathname + location.search);
+      history.replaceState(null, '', location.pathname);
     } catch(e) { console.error('Invalid invite link:', e); }
   }
 
