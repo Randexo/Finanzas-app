@@ -68,25 +68,11 @@ function applyLock() {
 }
 
 function generateInviteLink() {
-  const saved = JSON.parse(localStorage.getItem('mf_state') || '{}');
-  const inner = saved.state || {};
-  const cfg = {
-    sheetsUrl: sheetsUrl,
-    token:     tgConfig.token,
-    chatId:    tgConfig.chatId,
-    geminiKey: tgConfig.claudeKey,
-    state:     JSON.stringify({
-      state:     { income: inner.income || 0, categories: inner.categories || [], expenses: [] },
-      nextCatId: saved.nextCatId || 1,
-      nextExpId: 1
-    })
-  };
-  const hash = btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
-  const base = 'https://randexo.github.io/Finanzas-app';
-  const url  = base + '?invite=' + encodeURIComponent(hash);
-  const catCount = state.categories.length;
+  if (!sheetsUrl) { alert('Configura primero la URL de Google Sheets.'); return; }
+  const hash = btoa(unescape(encodeURIComponent(sheetsUrl)));
+  const url  = 'https://randexo.github.io/Finanzas-app?invitacion=' + encodeURIComponent(hash);
   navigator.clipboard.writeText(url).then(() => {
-    alert(`Link copiado.\n\nCompartelo por WhatsApp. Cada persona solo necesita abrirlo una vez.\n\n✓ Incluye ${catCount} categorías (los gastos se sincronizan desde Sheets).`);
+    alert('Link copiado.\n\nCompartelo por WhatsApp. Cada persona solo necesita abrirlo una vez.');
   }).catch(() => {
     prompt('Copia este link y compartelo:', url);
   });
@@ -101,20 +87,15 @@ function generateInviteLink() {
   }
 
   // Procesar link de invitación
-  const _inv = new URLSearchParams(location.search).get('invite');
+  const _inv = new URLSearchParams(location.search).get('invitacion');
   if (_inv) {
     try {
-      const cfg = JSON.parse(decodeURIComponent(escape(atob(_inv))));
+      const url = decodeURIComponent(escape(atob(_inv)));
       localStorage.clear();
-      if (cfg.sheetsUrl) localStorage.setItem('mf_sheets_url', cfg.sheetsUrl);
-      localStorage.setItem('mf_tg', JSON.stringify({
-        token: cfg.token || '', chatId: cfg.chatId || '',
-        claudeKey: cfg.geminiKey || '', lastUpdateId: 0
-      }));
-      if (cfg.state && cfg.state !== '{}') localStorage.setItem('mf_state', cfg.state);
+      localStorage.setItem('mf_sheets_url', url);
       localStorage.setItem('mf_locked', '1');
       history.replaceState(null, '', location.pathname);
-    } catch(e) { console.error('Invite link invalido:', e); }
+    } catch(e) { console.error('Invitacion invalida:', e); }
   }
 
   buildMonthSelector();
