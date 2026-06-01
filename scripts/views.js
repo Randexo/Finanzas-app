@@ -68,13 +68,18 @@ function applyLock() {
 }
 
 function generateInviteLink() {
-  const full = JSON.parse(localStorage.getItem('mf_state') || '{}');
+  const saved = JSON.parse(localStorage.getItem('mf_state') || '{}');
+  const inner = saved.state || {};
   const cfg = {
     sheetsUrl: sheetsUrl,
     token:     tgConfig.token,
     chatId:    tgConfig.chatId,
     geminiKey: tgConfig.claudeKey,
-    state:     JSON.stringify({ income: full.income || 0, categories: full.categories || [] })
+    state:     JSON.stringify({
+      state:     { income: inner.income || 0, categories: inner.categories || [], expenses: [] },
+      nextCatId: saved.nextCatId || 1,
+      nextExpId: 1
+    })
   };
   const hash = btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
   const base = 'https://randexo.github.io/Finanzas-app';
