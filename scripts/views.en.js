@@ -76,7 +76,7 @@ function generateInviteLink() {
   };
   const hash = btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
   const base = 'https://randexo.github.io/Finanzas-app';
-  const url  = base + '?invite=' + hash;
+  const url  = base + '?invite=' + encodeURIComponent(hash);
   const catCount = state.categories.length;
   navigator.clipboard.writeText(url).then(() => {
     alert(`Link copied.\n\nShare it via WhatsApp. Each person only needs to open it once.\n\n✓ Includes ${catCount} categories (expenses sync from Sheets).`);
