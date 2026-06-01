@@ -70,6 +70,7 @@ async function fetchCsv(sheetName) {
 
 function scheduleConfigSync() {
   if (_isSyncing) return;
+  if (localStorage.getItem('mf_locked') === '1') return;
   clearTimeout(_configTimer);
   _configTimer = setTimeout(saveConfigToSheets, 1500);
 }
