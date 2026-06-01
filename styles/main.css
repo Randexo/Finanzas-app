@@ -74,6 +74,7 @@ td.right { text-align: right; }
 .cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .cat-name-input { font-family: inherit; font-size: 0.84rem; font-weight: 500; color: #2D1F14; border: none; background: none; outline: none; width: 150px; }
 .cat-name-input:focus { border-bottom: 1px dashed #C4956A; }
+.cat-name-input::placeholder { color: #B0A090; font-weight: 400; }
 .amount-input { font-family: inherit; font-size: 0.88rem; font-weight: 600; color: #2D1F14; border: 1px solid transparent; background: none; outline: none; text-align: right; width: 100px; padding: 5px 8px; border-radius: 6px; transition: border-color 0.15s, background 0.15s; }
 .amount-input:focus { border-color: #C4956A; background: #FDFAF7; }
 .amount-input::placeholder { color: #C8BEB4; font-weight: 400; }

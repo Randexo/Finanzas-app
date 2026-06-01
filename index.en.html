@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Finance</title>
+<link rel="stylesheet" href="styles/main.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">My<span>Finance</span></div>
+  <div class="sidebar-section">Personal</div>
+  <a class="sidebar-link active" id="nav-presupuesto" onclick="showView('presupuesto')">Budget</a>
+  <a class="sidebar-link" id="nav-seguimiento" onclick="showView('seguimiento')">Expense Tracker</a>
+  <a class="sidebar-link" id="nav-graficas" onclick="showView('graficas')">Charts</a>
+  <div class="sidebar-section">Tools</div>
+  <a class="sidebar-link" id="nav-exportar" onclick="showView('exportar')">Export History</a>
+  <div class="sidebar-tg">
+    <span class="tg-dot off" id="tg-dot"></span>
+    <span id="tg-label">Telegram disconnected</span>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TOPBAR (shared across views) -->
+  <div class="topbar">
+    <div>
+      <h1 id="view-h1">Personal Budget</h1>
+      <p id="view-sub">Monthly plan · define your categories and amounts</p>
+    </div>
+    <div class="month-selector">
+      <select id="month-sel" onchange="recalcAll()"></select>
+    </div>
+  </div>
+
+  <!-- ====== VIEW: BUDGET ====== -->
+  <div id="view-presupuesto">
+    <div class="income-row">
+      <label>Monthly net income</label>
+      <div class="income-input-wrap">
+        <span class="currency">$</span>
+        <input type="number" id="inp-income" value="5000" step="100"
+          onchange="state.income = parseFloat(this.value)||0; saveState(); recalcAll()">
+      </div>
+      <span class="income-note">Adjust the amount to your reality</span>
+    </div>
+
+    <div class="summary-grid">
+      <div class="sum-card accent">
+        <div class="label">Net income</div>
+        <div class="value" id="p-income">$5,000</div>
+        <div class="sub">current month</div>
+      </div>
+      <div class="sum-card" id="p-sc-plan">
+        <div class="label">Total budgeted</div>
+        <div class="value" id="p-plan">$0</div>
+        <div class="sub" id="p-plan-pct">0% of income</div>
+      </div>
+      <div class="sum-card" id="p-sc-real">
+        <div class="label">Total spent</div>
+        <div class="value" id="p-real">$0</div>
+        <div class="sub" id="p-real-pct">0% of income</div>
+      </div>
+      <div class="sum-card" id="p-sc-savings">
+        <div class="label">Actual savings</div>
+        <div class="value" id="p-savings">$5,000</div>
+        <div class="sub" id="p-savings-pct">100% savings rate</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Expense categories</span>
+        <button class="add-btn" onclick="addCategory()">+ Add category</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:200px">Category</th>
+            <th class="right">Budget</th>
+            <th class="right">Spent</th>
+            <th class="right">Difference</th>
+            <th class="right">% income</th>
+            <th style="width:100px;text-align:center">Status</th>
+            <th style="width:40px"></th>
+          </tr>
+        </thead>
+        <tbody id="budget-body"></tbody>
+      </table>
+      <div class="footer-note">Actual expenses are tracked in Expense Tracker.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Budget vs. Actual by Category</span></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#E0D8D0"></div> Budgeted</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#5BAD8F"></div> On Track</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#E67E22"></div> Alert</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#C0504D"></div> Exceeded</div>
+      </div>
+      <div class="bars-card" id="p-bars"></div>
+    </div>
+  </div>
+
+  <!-- ====== VIEW: EXPENSE TRACKER ====== -->
+  <div id="view-seguimiento" hidden>
+    <div class="summary-grid">
+      <div class="sum-card accent">
+        <div class="label">Net income</div>
+        <div class="value" id="sg-income">$5,000</div>
+        <div class="sub">current month</div>
+      </div>
+      <div class="sum-card" id="sg-sc-plan">
+        <div class="label">Total budgeted</div>
+        <div class="value" id="sg-plan">$0</div>
+        <div class="sub" id="sg-plan-pct">–</div>
+      </div>
+      <div class="sum-card" id="sg-sc-real">
+        <div class="label">Total spent</div>
+        <div class="value" id="sg-real">$0</div>
+        <div class="sub" id="sg-real-pct">–</div>
+      </div>
+      <div class="sum-card" id="sg-sc-avail">
+        <div class="label">Available</div>
+        <div class="value" id="sg-avail">$5,000</div>
+        <div class="sub" id="sg-avail-pct">from budget</div>
+      </div>
+    </div>
+
+    <!-- TELEGRAM -->
+    <div class="tg-panel">
+      <div class="tg-header" onclick="toggleTgPanel()">
+        <div class="tg-header-left">
+          <div class="tg-header-icon">TG</div>
+          <div>
+            <div class="tg-title">Connect Telegram</div>
+            <div class="tg-subtitle" id="tg-panel-sub">Log expenses by sending messages to your bot</div>
+          </div>
+        </div>
+        <span class="tg-toggle" id="tg-toggle">Configure ▾</span>
+      </div>
+      <div id="tg-body" hidden>
+        <div class="tg-fields">
+          <div class="tg-field">
+            <label>Bot token</label>
+            <input type="password" id="tg-token" placeholder="123456:ABC-DEF..." oninput="onTgInput()">
+          </div>
+          <div class="tg-field">
+            <label>Your Chat ID</label>
+            <input type="text" id="tg-chat-id" placeholder="123456789" oninput="onTgInput()">
+          </div>
+          <div class="tg-field">
+            <label>Gemini API Key <span style="font-weight:400;color:#9B8070">(optional — enables free-form input)</span></label>
+            <input type="password" id="tg-claude-key" placeholder="AIza..." oninput="onTgInput()">
+          </div>
+        </div>
+        <div class="tg-field" style="margin-top:12px;padding-top:12px;border-top:1px solid #E8DDD5">
+          <label>Google Sheets URL <span style="font-weight:400;color:#9B8070">(Apps Script — enables cross-device sync)</span></label>
+          <input type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/..." oninput="onSheetsInput()">
+        </div>
+        <div class="tg-actions">
+          <button class="btn-primary" onclick="syncTelegram()">Sync Telegram</button>
+          <button class="btn-primary" onclick="syncFromSheets()">Sync Sheets</button>
+          <button class="btn-secondary" onclick="window.open('https://t.me/userinfobot','_blank')">Get my Chat ID</button>
+          <button class="btn-secondary" onclick="generateInviteLink()">Generate invite link</button>
+          <span class="tg-status-msg" id="tg-msg">–</span>
+        </div>
+        <div class="tg-instructions">
+          <strong>1. Create bot:</strong> open @BotFather in Telegram &rarr; <code>/newbot</code> &rarr; copy the token.<br>
+          <strong>2. Chat ID:</strong> click "Get my Chat ID".<br>
+          <strong>3. Format:</strong> <code>150 groceries tuesday dinner</code><br>
+          Number = amount &bull; first word = category &bull; rest = note.
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Monthly Expenses</span>
+        <button class="add-btn" onclick="toggleAddForm()">+ Add expense</button>
+      </div>
+      <div class="add-form" id="add-form" hidden>
+        <div class="ff f-cat">
+          <label>Category</label>
+          <select id="new-cat"></select>
+        </div>
+        <div class="ff f-amt">
+          <label>Amount</label>
+          <input type="number" id="new-amt" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="ff f-note">
+          <label>Note</label>
+          <input type="text" id="new-note" placeholder="optional description">
+        </div>
+        <div class="ff f-date">
+          <label>Date</label>
+          <input type="date" id="new-date">
+        </div>
+        <button class="btn-submit" onclick="submitExpense()">Add</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:100px">Date</th>
+            <th>Category</th>
+            <th class="right">Amount</th>
+            <th>Note</th>
+            <th style="text-align:center;width:80px">Source</th>
+            <th style="width:40px"></th>
+          </tr>
+        </thead>
+        <tbody id="exp-body"></tbody>
+      </table>
+      <div class="empty-state" id="exp-empty">
+        No expenses recorded this month.<br>
+        <span style="font-size:0.72rem">Add one manually or sync Telegram.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Progress by Category</span></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#E0D8D0"></div> Budgeted</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#5BAD8F"></div> On Track</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#E67E22"></div> Alert</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#C0504D"></div> Exceeded</div>
+      </div>
+      <div class="bars-card" id="sg-bars"></div>
+    </div>
+  </div>
+
+  <!-- ====== VIEW: CHARTS ====== -->
+  <div id="view-graficas" hidden>
+    <div class="period-selector">
+      <button class="period-btn active" onclick="setPeriod('diario')">Daily</button>
+      <button class="period-btn" onclick="setPeriod('semanal')">Weekly</button>
+      <button class="period-btn" onclick="setPeriod('mensual')">Monthly</button>
+      <button class="period-btn" onclick="setPeriod('anual')">Annual</button>
+    </div>
+    <div class="charts-grid">
+      <div class="card chart-card">
+        <div class="card-header"><span class="card-title">Spending Over Time</span></div>
+        <div class="chart-wrap"><canvas id="chart-line"></canvas></div>
+      </div>
+      <div class="card chart-card">
+        <div class="card-header"><span class="card-title">By Category</span></div>
+        <div class="chart-wrap"><canvas id="chart-donut"></canvas></div>
+      </div>
+      <div class="card chart-card chart-full">
+        <div class="card-header"><span class="card-title">Budget vs. Actual</span></div>
+        <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== VIEW: EXPORT ====== -->
+  <div id="view-exportar" hidden>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Export History</span></div>
+      <div class="export-body">
+        <div class="export-row">
+          <div class="export-info">
+            <div class="export-title">Export current month</div>
+            <div class="export-sub">All expenses for the selected month</div>
+          </div>
+          <button class="btn-primary" onclick="exportMonth()">Download CSV</button>
+        </div>
+        <div class="export-row">
+          <div class="export-info">
+            <div class="export-title">Export by date range</div>
+            <div class="export-sub">Select a specific period</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="date" id="exp-from" class="date-input">
+            <span style="font-size:0.8rem;color:#7A6A5A">to</span>
+            <input type="date" id="exp-to" class="date-input">
+            <button class="btn-primary" onclick="exportRange()">Download CSV</button>
+          </div>
+        </div>
+        <div class="export-row">
+          <div class="export-info">
+            <div class="export-title">Export full history</div>
+            <div class="export-sub">Up to 5 years of data</div>
+          </div>
+          <button class="btn-secondary" onclick="exportAll()">Download full CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- SCRIPTS (order matters: state first, then logic, views last) -->
+<script src="scripts/state.en.js"></script>
+<script src="scripts/categories.en.js"></script>
+<script src="scripts/sheets.js"></script>
+<script src="scripts/expenses.en.js"></script>
+<script src="scripts/telegram.en.js"></script>
+<script src="scripts/charts.en.js"></script>
+<script src="scripts/export.en.js"></script>
+<script src="scripts/views.en.js"></script>
+
+</body>
+</html>
