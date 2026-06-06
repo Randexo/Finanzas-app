@@ -127,38 +127,43 @@ async function syncFromSheets() {
   if (!sheetsUrl) return;
   _isSyncing = true;
   try {
-    // Cargar config (categorías + ingreso) desde pestaña Config
-    const cfgRows = await fetchCsv('Config');
-    const cfgMap  = {};
-    cfgRows.forEach(r => { cfgMap[r.key] = r.value; });
-
-    // Income: actualizar siempre que exista, independiente de categorías
-    if (cfgMap.income) {
-      const parsed = parseFloat(cfgMap.income);
-      if (parsed > 0) {
-        state.income = parsed;
-        const incInput = document.getElementById('inp-income');
-        if (incInput) incInput.value = state.income;
-      }
-    }
-
-    // Categorías: separado del income para que un error no bloquee ambos
-    if (cfgMap.categories) {
-      try {
-        const cats = JSON.parse(cfgMap.categories);
-        if (Array.isArray(cats) && cats.length > 0) {
-          state.categories = cats;
-          nextCatId = Math.max(...state.categories.map(c => c.id)) + 1;
+    // Config: Apps Script doGet (sin caché de gviz)
+    try {
+      const r   = await fetch(sheetsUrl + '?type=config');
+      const cfg = await r.json();
+      if (cfg.ok && cfg.config) {
+        if (cfg.config.income > 0) {
+          state.income = cfg.config.income;
+          const el = document.getElementById('inp-income');
+          if (el) el.value = state.income;
         }
-      } catch(e) {
-        console.warn('[Sheets] categories parse error:', e.message, '| raw:', cfgMap.categories?.slice(0, 80));
+        if (Array.isArray(cfg.config.categories) && cfg.config.categories.length > 0) {
+          state.categories = cfg.config.categories;
+          nextCatId = Math.max(...state.categories.map(c => c.id)) + 1;
+        } else if (!cfg.config.income && state.categories.length > 0) {
+          saveConfigToSheets();
+        }
       }
-    } else if (cfgRows.length === 0 && state.categories.length > 0) {
-      // Sheet vacío por primera vez — migrar config local
-      saveConfigToSheets();
+    } catch(cfgErr) {
+      console.warn('[Sheets] config via script falló, usando gviz:', cfgErr.message);
+      const cfgRows = await fetchCsv('Config');
+      const cfgMap  = {};
+      cfgRows.forEach(r => { cfgMap[r.key] = r.value; });
+      if (cfgMap.income) {
+        const p = parseFloat(cfgMap.income);
+        if (p > 0) { state.income = p; const el = document.getElementById('inp-income'); if (el) el.value = p; }
+      }
+      if (cfgMap.categories) {
+        try {
+          const cats = JSON.parse(cfgMap.categories);
+          if (Array.isArray(cats) && cats.length > 0) { state.categories = cats; nextCatId = Math.max(...cats.map(c => c.id)) + 1; }
+        } catch(e) { console.warn('[Sheets] categories parse error:', e.message); }
+      } else if (cfgRows.length === 0 && state.categories.length > 0) {
+        saveConfigToSheets();
+      }
     }
 
-    // Cargar gastos desde pestaña Gastos
+    // Gastos: gviz CSV
     const expRows = await fetchCsv('Gastos');
 
     if (expRows.length === 0 && state.expenses.length > 0) {
