@@ -6,6 +6,7 @@
 <title>Finanzas Personales</title>
 <link rel="stylesheet" href="styles/main.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -17,7 +18,7 @@
   <a class="sidebar-link" id="nav-seguimiento" onclick="showView('seguimiento')">Seguimiento de Gastos</a>
   <a class="sidebar-link" id="nav-graficas" onclick="showView('graficas')">Graficas</a>
   <div class="sidebar-section">Herramientas</div>
-  <a class="sidebar-link" id="nav-exportar" onclick="showView('exportar')">Exportar Historico</a>
+  <a class="sidebar-link" id="nav-exportar" onclick="showView('exportar')">Importar / Exportar</a>
   <div class="sidebar-tg">
     <span class="tg-dot off" id="tg-dot"></span>
     <span id="tg-label">Telegram desconectado</span>
@@ -262,8 +263,34 @@
     </div>
   </div>
 
-  <!-- ====== VISTA: EXPORTAR ====== -->
+  <!-- ====== VISTA: IMPORTAR / EXPORTAR ====== -->
   <div id="view-exportar" hidden>
+
+    <!-- IMPORTAR REPORTE DE TARJETA -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><span class="card-title">Importar reporte de tarjeta</span></div>
+      <div class="export-body">
+        <div class="export-row" style="flex-wrap:wrap;gap:12px">
+          <div class="export-info">
+            <div class="export-title">Subir estado de cuenta (PDF)</div>
+            <div class="export-sub">Gemini extrae las transacciones y las categoriza automáticamente</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="month" id="import-month" class="date-input"
+              style="padding:6px 8px;font-size:0.85rem">
+            <input type="file" id="import-file" accept=".pdf"
+              style="font-size:0.82rem;max-width:200px">
+            <button id="import-analyze-btn" class="btn-primary" onclick="analyzeReport()">
+              Analizar PDF
+            </button>
+          </div>
+        </div>
+        <div id="import-status" style="font-size:0.82rem;color:#7A6A5A;margin-top:4px;min-height:1.2em"></div>
+        <div id="import-preview" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- EXPORTAR -->
     <div class="card">
       <div class="card-header"><span class="card-title">Exportar historico</span></div>
       <div class="export-body">
@@ -300,14 +327,15 @@
 </main>
 
 <!-- SCRIPTS (orden importa: state primero, luego logica, views al final) -->
-<script src="scripts/state.js?v=11"></script>
-<script src="scripts/categories.js?v=11"></script>
-<script src="scripts/sheets.js?v=11"></script>
-<script src="scripts/expenses.js?v=11"></script>
-<script src="scripts/telegram.js?v=11"></script>
-<script src="scripts/charts.js?v=11"></script>
-<script src="scripts/export.js?v=11"></script>
-<script src="scripts/views.js?v=11"></script>
+<script src="scripts/state.js?v=12"></script>
+<script src="scripts/categories.js?v=12"></script>
+<script src="scripts/sheets.js?v=12"></script>
+<script src="scripts/expenses.js?v=12"></script>
+<script src="scripts/telegram.js?v=12"></script>
+<script src="scripts/charts.js?v=12"></script>
+<script src="scripts/export.js?v=12"></script>
+<script src="scripts/import.js?v=12"></script>
+<script src="scripts/views.js?v=12"></script>
 
 </body>
 </html>

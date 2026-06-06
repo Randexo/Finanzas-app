@@ -9,7 +9,7 @@ const VIEWS = {
   presupuesto: { h1: 'Presupuesto Personal',    sub: 'Plan mensual · define tus categorias y montos' },
   seguimiento: { h1: 'Seguimiento de Gastos',   sub: 'Transacciones del mes · conecta Telegram para registrar al vuelo' },
   graficas:    { h1: 'Graficas',                sub: 'Visualizaciones diarias, semanales, mensuales y anuales' },
-  exportar:    { h1: 'Exportar Historico',      sub: 'Descarga tus datos en formato CSV' },
+  exportar:    { h1: 'Importar / Exportar',      sub: 'Sube un reporte de tarjeta o descarga tus datos en CSV' },
 };
 
 function showView(view) {
@@ -100,6 +100,10 @@ function generateInviteLink() {
 
   buildMonthSelector();
   loadState();
+
+  // Inicializar mes del importador con el mes activo
+  const importMonth = document.getElementById('import-month');
+  if (importMonth) importMonth.value = monthKey();
 
   const incInput = document.getElementById('inp-income');
   if (incInput) incInput.value = state.income;

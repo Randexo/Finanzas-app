@@ -230,6 +230,22 @@ td.right { text-align: right; }
   .export-row > div { flex-wrap: wrap; }
 }
 
+/* ── IMPORTAR REPORTE ────────────────────────────────────── */
+.imp-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 8px; }
+.imp-table thead tr { border-bottom: 1px solid #E8DDD0; color: #7A6A5A; }
+.imp-table th, .imp-table td { padding: 6px 6px; text-align: left; vertical-align: middle; }
+.imp-table tbody tr:hover { background: rgba(196,149,106,0.06); }
+.imp-td-date  { white-space: nowrap; width: 90px; }
+.imp-td-desc  { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.imp-td-cat   { width: 170px; }
+.imp-td-amt   { text-align: right; white-space: nowrap; font-weight: 600; }
+.imp-td-chk   { text-align: center; width: 32px; }
+.imp-cat-sel  { font-size: 0.78rem; padding: 2px 4px; border-radius: 4px; border: 1px solid #D4C4B4; background: #fff; width: 100%; }
+.imp-confirm-row { margin-top: 14px; display: flex; gap: 12px; align-items: center; }
+.imp-confirm-msg { font-size: 0.82rem; color: #5BAD8F; }
+.import-empty { font-size: 0.84rem; color: #7A6A5A; padding: 8px 0; }
+.src-tarjeta  { font-size: 0.68rem; font-weight: 600; padding: 2px 7px; border-radius: 10px; background: #EDE7DE; color: #8A5A2A; }
+
 /* Modo bloqueado — oculta controles de edición para usuarios invitados */
 body.locked .amount-input,
 body.locked .cat-name-input { pointer-events: none; }

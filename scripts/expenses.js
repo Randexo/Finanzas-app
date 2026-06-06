@@ -42,8 +42,8 @@ function renderExpenses() {
     const cat     = state.categories.find(c => c.id === e.catId);
     const name    = cat ? escHtml(cat.name) : 'Desconocida';
     const color   = cat ? cat.color : '#8A8A8A';
-    const srcHtml = e.source === 'telegram'
-      ? '<span class="src-tg">Telegram</span>'
+    const srcHtml = e.source === 'telegram' ? '<span class="src-tg">Telegram</span>'
+      : e.source === 'tarjeta' ? '<span class="src-tarjeta">Tarjeta</span>'
       : '<span class="src-manual">Manual</span>';
 
     return `<tr>
