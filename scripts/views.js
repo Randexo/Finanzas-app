@@ -68,7 +68,7 @@ function applyLock() {
 function generateInviteLink() {
   if (!sheetsUrl) { alert('Configura primero la URL de Google Sheets.'); return; }
   const hash = btoa(unescape(encodeURIComponent(sheetsUrl)));
-  const url  = 'https://randexo.github.io/Finanzas-app?invitacion=' + encodeURIComponent(hash);
+  const url  = 'https://finanzasrojasramirez.netlify.app?invitacion=' + encodeURIComponent(hash);
   navigator.clipboard.writeText(url).then(() => {
     alert('Link copiado.\n\nCompartelo por WhatsApp. Cada persona solo necesita abrirlo una vez.');
   }).catch(() => {
