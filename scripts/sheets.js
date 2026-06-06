@@ -85,7 +85,7 @@ async function saveConfigToSheets() {
     body: JSON.stringify({
       action:     'saveConfig',
       income:     state.income,
-      categories: state.categories
+      categories: JSON.stringify(state.categories)
     })
   });
 }
@@ -132,17 +132,27 @@ async function syncFromSheets() {
     const cfgMap  = {};
     cfgRows.forEach(r => { cfgMap[r.key] = r.value; });
 
+    // Income: actualizar siempre que exista, independiente de categorías
+    if (cfgMap.income) {
+      const parsed = parseFloat(cfgMap.income);
+      if (parsed > 0) {
+        state.income = parsed;
+        const incInput = document.getElementById('inp-income');
+        if (incInput) incInput.value = state.income;
+      }
+    }
+
+    // Categorías: separado del income para que un error no bloquee ambos
     if (cfgMap.categories) {
       try {
         const cats = JSON.parse(cfgMap.categories);
-        if (cats.length > 0) {
+        if (Array.isArray(cats) && cats.length > 0) {
           state.categories = cats;
-          state.income     = parseFloat(cfgMap.income) || state.income;
           nextCatId = Math.max(...state.categories.map(c => c.id)) + 1;
-          const incInput = document.getElementById('inp-income');
-          if (incInput) incInput.value = state.income;
         }
-      } catch(e) {}
+      } catch(e) {
+        console.warn('[Sheets] categories parse error:', e.message, '| raw:', cfgMap.categories?.slice(0, 80));
+      }
     } else if (cfgRows.length === 0 && state.categories.length > 0) {
       // Sheet vacío por primera vez — migrar config local
       saveConfigToSheets();
