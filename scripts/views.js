@@ -7,12 +7,15 @@
 
 const VIEWS = {
   presupuesto: { h1: 'Presupuesto Personal',    sub: 'Plan mensual · define tus categorias y montos' },
-  seguimiento: { h1: 'Seguimiento de Gastos',   sub: 'Transacciones del mes · conecta Telegram para registrar al vuelo' },
+  seguimiento: { h1: 'Seguimiento de Gastos',   sub: 'Transacciones del mes · sincroniza Telegram para registrar al vuelo' },
   graficas:    { h1: 'Graficas',                sub: 'Visualizaciones diarias, semanales, mensuales y anuales' },
-  exportar:    { h1: 'Importar / Exportar',      sub: 'Sube un reporte de tarjeta o descarga tus datos en CSV' },
+  exportar:    { h1: 'Importar / Exportar',     sub: 'Sube un reporte de tarjeta o descarga tus datos en CSV' },
+  config:      { h1: 'Configuracion',           sub: 'Conexiones y acceso para la familia · solo visible para el admin' },
 };
 
 function showView(view) {
+  if (view === 'config' && isLocked()) return;
+
   Object.keys(VIEWS).forEach(v => {
     const el = document.getElementById('view-' + v);
     if (el) el.hidden = (v !== view);
@@ -24,6 +27,7 @@ function showView(view) {
   document.getElementById('view-sub').textContent = VIEWS[view]?.sub || '';
 
   if (view === 'graficas') renderCharts();
+  if (view === 'config')   updateConfigStatus();
   recalcAll();
 }
 
@@ -59,12 +63,6 @@ function isLocked() {
 function applyLock() {
   if (!isLocked()) return;
   document.body.classList.add('locked');
-  const body   = document.getElementById('tg-body');
-  const toggle = document.getElementById('tg-toggle');
-  const header = document.querySelector('.tg-header');
-  if (body)   body.hidden        = true;
-  if (toggle) toggle.hidden      = true;
-  if (header) header.onclick     = null;
 }
 
 function generateInviteLink() {
@@ -101,7 +99,6 @@ function generateInviteLink() {
   buildMonthSelector();
   loadState();
 
-  // Inicializar mes del importador con el mes activo
   const importMonth = document.getElementById('import-month');
   if (importMonth) importMonth.value = monthKey();
 
@@ -110,6 +107,7 @@ function generateInviteLink() {
 
   loadTgConfig();
   loadSheetsConfig();
+  updateConfigStatus();
   applyLock();
   fillCatSelect();
   recalcAll();

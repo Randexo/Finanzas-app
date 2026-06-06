@@ -10,6 +10,7 @@ function loadSheetsConfig() {
   sheetsUrl = localStorage.getItem('mf_sheets_url') || '';
   const el = document.getElementById('sheets-url');
   if (el) el.value = sheetsUrl;
+  if (typeof updateConfigStatus === 'function') updateConfigStatus();
 }
 
 function onSheetsInput() {

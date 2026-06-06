@@ -16,6 +16,7 @@ function loadTgConfig() {
     if (chatEl)   chatEl.value   = tgConfig.chatId    || '';
     if (claudeEl) claudeEl.value = tgConfig.claudeKey || '';
     updateTgDot();
+    updateConfigStatus();
     if (tgConfig.token) setTimeout(saveTgConfigToSheets, 2000);
   } catch(e) {}
 }
@@ -49,6 +50,18 @@ function onTgInput() {
   updateTgDot();
   clearTimeout(_tgSyncTimer);
   _tgSyncTimer = setTimeout(saveTgConfigToSheets, 1500);
+}
+
+function updateConfigStatus() {
+  function dot(id, ok) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className  = 'cfg-status ' + (ok ? 'cfg-ok' : 'cfg-empty');
+    el.textContent = ok ? '● Configured' : '○ Not set';
+  }
+  dot('cfg-sheets-status', !!sheetsUrl);
+  dot('cfg-gemini-status', !!tgConfig.claudeKey);
+  dot('cfg-tg-status',     !!(tgConfig.token && tgConfig.chatId));
 }
 
 function updateTgDot() {

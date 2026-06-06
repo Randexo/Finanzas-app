@@ -6,12 +6,15 @@
 
 const VIEWS = {
   presupuesto: { h1: 'Personal Budget',    sub: 'Monthly plan · define your categories and amounts' },
-  seguimiento: { h1: 'Expense Tracker',    sub: 'Monthly transactions · connect Telegram to log on the go' },
+  seguimiento: { h1: 'Expense Tracker',    sub: 'Monthly transactions · sync Telegram to log on the go' },
   graficas:    { h1: 'Charts',             sub: 'Daily, weekly, monthly, and annual visualizations' },
-  exportar:    { h1: 'Export History',     sub: 'Download your data in CSV format' },
+  exportar:    { h1: 'Import / Export',    sub: 'Upload a card statement or download your data as CSV' },
+  config:      { h1: 'Settings',           sub: 'Connections and family access · admin only' },
 };
 
 function showView(view) {
+  if (view === 'config' && isLocked()) return;
+
   Object.keys(VIEWS).forEach(v => {
     const el = document.getElementById('view-' + v);
     if (el) el.hidden = (v !== view);
@@ -23,6 +26,7 @@ function showView(view) {
   document.getElementById('view-sub').textContent = VIEWS[view]?.sub || '';
 
   if (view === 'graficas') renderCharts();
+  if (view === 'config')   updateConfigStatus();
   recalcAll();
 }
 
@@ -57,12 +61,6 @@ function isLocked() {
 function applyLock() {
   if (!isLocked()) return;
   document.body.classList.add('locked');
-  const body   = document.getElementById('tg-body');
-  const toggle = document.getElementById('tg-toggle');
-  const header = document.querySelector('.tg-header');
-  if (body)   body.hidden        = true;
-  if (toggle) toggle.hidden      = true;
-  if (header) header.onclick     = null;
 }
 
 function generateInviteLink() {
@@ -98,11 +96,15 @@ function generateInviteLink() {
   buildMonthSelector();
   loadState();
 
+  const importMonth = document.getElementById('import-month');
+  if (importMonth) importMonth.value = monthKey();
+
   const incInput = document.getElementById('inp-income');
   if (incInput) incInput.value = state.income;
 
   loadTgConfig();
   loadSheetsConfig();
+  updateConfigStatus();
   loadCatTranslations();
   applyLock();
   fillCatSelect();

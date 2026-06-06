@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+y por q<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -19,6 +19,7 @@
   <a class="sidebar-link" id="nav-graficas" onclick="showView('graficas')">Graficas</a>
   <div class="sidebar-section">Herramientas</div>
   <a class="sidebar-link" id="nav-exportar" onclick="showView('exportar')">Importar / Exportar</a>
+  <a class="sidebar-link cfg-link" id="nav-config" onclick="showView('config')">Configuracion</a>
   <div class="sidebar-tg">
     <span class="tg-dot off" id="tg-dot"></span>
     <span id="tg-label">Telegram desconectado</span>
@@ -136,51 +137,11 @@
       </div>
     </div>
 
-    <!-- TELEGRAM -->
-    <div class="tg-panel">
-      <div class="tg-header" onclick="toggleTgPanel()">
-        <div class="tg-header-left">
-          <div class="tg-header-icon">TG</div>
-          <div>
-            <div class="tg-title">Conectar Telegram</div>
-            <div class="tg-subtitle" id="tg-panel-sub">Registra gastos enviando mensajes a tu bot</div>
-          </div>
-        </div>
-        <span class="tg-toggle" id="tg-toggle">Configurar ▾</span>
-      </div>
-      <div id="tg-body" hidden>
-        <div class="tg-fields">
-          <div class="tg-field">
-            <label>Token del bot</label>
-            <input type="password" id="tg-token" placeholder="123456:ABC-DEF..." oninput="onTgInput()">
-          </div>
-          <div class="tg-field">
-            <label>Tu Chat ID</label>
-            <input type="text" id="tg-chat-id" placeholder="123456789" oninput="onTgInput()">
-          </div>
-          <div class="tg-field">
-            <label>Gemini API Key <span style="font-weight:400;color:#9B8070">(opcional — activa lenguaje libre)</span></label>
-            <input type="password" id="tg-claude-key" placeholder="AIza..." oninput="onTgInput()">
-          </div>
-        </div>
-        <div class="tg-field" style="margin-top:12px;padding-top:12px;border-top:1px solid #E8DDD5">
-          <label>Google Sheets URL <span style="font-weight:400;color:#9B8070">(Apps Script — activa sincronización entre dispositivos)</span></label>
-          <input type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/..." oninput="onSheetsInput()">
-        </div>
-        <div class="tg-actions">
-          <button class="btn-primary" onclick="syncTelegram()">Sincronizar Telegram</button>
-          <button class="btn-primary" onclick="syncFromSheets()">Sincronizar Sheets</button>
-          <button class="btn-secondary" onclick="window.open('https://t.me/userinfobot','_blank')">Obtener mi Chat ID</button>
-          <button class="btn-secondary" onclick="generateInviteLink()">Generar link de invitacion</button>
-          <span class="tg-status-msg" id="tg-msg">–</span>
-        </div>
-        <div class="tg-instructions">
-          <strong>1. Crear bot:</strong> abre @BotFather en Telegram &rarr; <code>/newbot</code> &rarr; copia el token.<br>
-          <strong>2. Chat ID:</strong> haz clic en "Obtener mi Chat ID".<br>
-          <strong>3. Formato:</strong> <code>150 alimentacion cena del martes</code><br>
-          Numero = monto &bull; primera palabra = categoria &bull; resto = nota.
-        </div>
-      </div>
+    <!-- SYNC BAR -->
+    <div class="sync-bar">
+      <button class="btn-primary" onclick="syncTelegram()">Sincronizar Telegram</button>
+      <button class="btn-secondary" onclick="syncFromSheets()">Sincronizar Sheets</button>
+      <span id="tg-panel-sub" class="sync-bar-status">–</span>
     </div>
 
     <!-- GASTOS -->
@@ -324,18 +285,86 @@
     </div>
   </div>
 
+  <!-- ====== VISTA: CONFIGURACIÓN (admin only) ====== -->
+  <div id="view-config" hidden>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><span class="card-title">Conexiones</span></div>
+      <div class="cfg-body">
+
+        <div class="cfg-row">
+          <div class="cfg-label-row">
+            <span class="cfg-label">Google Sheets</span>
+            <span id="cfg-sheets-status" class="cfg-status cfg-empty">○ Sin configurar</span>
+          </div>
+          <div class="cfg-sub">URL del Apps Script — sincroniza gastos entre todos los dispositivos</div>
+          <input type="text" id="sheets-url" class="cfg-input"
+            placeholder="https://script.google.com/macros/s/..."
+            oninput="onSheetsInput(); updateConfigStatus()">
+        </div>
+
+        <div class="cfg-row">
+          <div class="cfg-label-row">
+            <span class="cfg-label">Gemini API Key</span>
+            <span id="cfg-gemini-status" class="cfg-status cfg-empty">○ Sin configurar</span>
+          </div>
+          <div class="cfg-sub">Activa lenguaje libre en Telegram y el análisis de reportes PDF</div>
+          <input type="password" id="tg-claude-key" class="cfg-input"
+            placeholder="AIza..."
+            oninput="onTgInput(); updateConfigStatus()">
+        </div>
+
+        <div class="cfg-row">
+          <div class="cfg-label-row">
+            <span class="cfg-label">Telegram Bot</span>
+            <span id="cfg-tg-status" class="cfg-status cfg-empty">○ Sin configurar</span>
+          </div>
+          <div class="cfg-sub">Token del bot y Chat ID del grupo familiar</div>
+          <div class="cfg-input-group">
+            <input type="password" id="tg-token" class="cfg-input"
+              placeholder="Token: 123456:ABC-DEF..."
+              oninput="onTgInput(); updateConfigStatus()">
+            <input type="text" id="tg-chat-id" class="cfg-input"
+              placeholder="Chat ID del grupo: -100123456789"
+              oninput="onTgInput(); updateConfigStatus()">
+          </div>
+          <div class="cfg-actions">
+            <button class="btn-primary" onclick="syncTelegram()">Probar Telegram</button>
+            <button class="btn-secondary" onclick="window.open('https://t.me/userinfobot','_blank')">Obtener Chat ID</button>
+            <span class="tg-status-msg" id="tg-msg"></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Acceso para familia</span></div>
+      <div class="cfg-body">
+        <div class="cfg-row">
+          <div class="cfg-sub">Genera un link de solo lectura. Tu familia lo abre una vez y ya puede ver el panel sin poder editar nada.</div>
+          <div class="cfg-actions">
+            <button class="btn-primary" onclick="generateInviteLink()">Generar link de invitacion</button>
+            <button class="btn-secondary" onclick="syncFromSheets()">Sincronizar desde Sheets</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
 </main>
 
 <!-- SCRIPTS (orden importa: state primero, luego logica, views al final) -->
-<script src="scripts/state.js?v=12"></script>
-<script src="scripts/categories.js?v=12"></script>
-<script src="scripts/sheets.js?v=12"></script>
-<script src="scripts/expenses.js?v=12"></script>
-<script src="scripts/telegram.js?v=12"></script>
-<script src="scripts/charts.js?v=12"></script>
-<script src="scripts/export.js?v=12"></script>
-<script src="scripts/import.js?v=12"></script>
-<script src="scripts/views.js?v=12"></script>
+<script src="scripts/state.js?v=13"></script>
+<script src="scripts/categories.js?v=13"></script>
+<script src="scripts/sheets.js?v=13"></script>
+<script src="scripts/expenses.js?v=13"></script>
+<script src="scripts/telegram.js?v=13"></script>
+<script src="scripts/charts.js?v=13"></script>
+<script src="scripts/export.js?v=13"></script>
+<script src="scripts/import.js?v=13"></script>
+<script src="scripts/views.js?v=13"></script>
 
 </body>
 </html>
